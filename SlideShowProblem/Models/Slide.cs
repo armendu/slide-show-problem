@@ -6,18 +6,7 @@ namespace SlideShowProblem.Models
     {
         public List<Photo> Photos { get; set; }
         public HashSet<string> Tags { get; set; }
-
-        public Slide()
-        {
-
-        }
-
-        public Slide(Photo photo)
-        {
-            Photos.Add(photo);
-            Tags = new HashSet<string>(photo.Tags);
-        }
-
+        
         public Slide(List<Photo> photos)
         {
             Photos = new List<Photo>();

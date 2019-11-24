@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace SlideShowProblem.Models
+﻿namespace SlideShowProblem.Models
 {
     public class Photo
     {
@@ -8,6 +6,5 @@ namespace SlideShowProblem.Models
         public string[] Tags { get; set; }
         public Orientation Orientation { get; set; }
         public int TagCount { get; set; }
-        public bool IsUsed { get; set; }
     }
 }

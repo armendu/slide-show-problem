@@ -1,48 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SlideShowProblem.Extensions;
 using SlideShowProblem.Models;
 
 namespace SlideShowProblem
 {
     public class Solution
     {
-        public const int NO_ITERATIONS = 500;
-
-        public List<Slide> slides { get; set; }
-        public int interestFactor { get; set; }
+        private const int NO_ITERATIONS = 500;
+        private readonly Random _random = new Random();
+        public List<Slide> Slides { get; set; }
+        public int InterestFactor { get; set; }
 
         public Solution()
         {
-            this.interestFactor = 0;
-            this.slides = new List<Slide>();
+            InterestFactor = 0;
+            Slides = new List<Slide>();
         }
 
         // Generates first solution on random basis
         public void TrySolution(List<Photo> photos)
         {
-            Random random = new Random();
-
             // Change photos position
-            photos.OrderBy(x => random.Next());
+            photos.Shuffle(_random);
 
             // Number of photos
             int noPhotos = photos.Count;
 
             List<Photo> slidePhotos;
 
-            int skippedPhoto = -1;
+            int photoToSkipId = -1;
 
             // Iterate into photos and put them in list
             for (int i = 0; i < noPhotos; i++)
             {
                 // If we have selected this photo before
                 // Continue
-                if (photos[i].ID == skippedPhoto)
+                if (photos[i].ID == photoToSkipId)
                     continue;
 
                 slidePhotos = new List<Photo>();
-
 
                 // If current photo has horizontal orientation
                 // Put that photo into one slide
@@ -63,19 +61,20 @@ namespace SlideShowProblem
                     // If there is one
                     // Add that on the list
                     // And mark that one as visited
-                    if(nextVerticalPhoto != null)
+                    if (nextVerticalPhoto != null)
                     {
                         slidePhotos.Add(nextVerticalPhoto);
-                        skippedPhoto = nextVerticalPhoto.ID;
+                        photoToSkipId = nextVerticalPhoto.ID;
                     }
                 }
 
                 Slide oneSlide = new Slide(slidePhotos);
 
-                this.slides.Add(oneSlide);
+                this.Slides.Add(oneSlide);
             }
 
-
+            // Calculate fitness and save it
+            InterestFactor = CalculateInterestFactor(Slides);
         }
 
         // Returns the next vertical photo in list
@@ -98,43 +97,31 @@ namespace SlideShowProblem
 
 
         // Hill Climbing Algorithm
-        public void  HillClimbing()
+        public void HillClimbing()
         {
-            Random random = new Random();
-
-           
+            List<Slide> tmpSlides;
 
             // Try NO_ITERATIONS solutions
             for (int i = 0; i < NO_ITERATIONS; i++)
             {
-
-                List<Slide> tmpSlides = this.slides;
+                tmpSlides = new List<Slide>();
+                tmpSlides.AddRange(Slides);
 
                 // For each round generate two positions to swap slides
-                int position1, position2;
-
-                position1 = random.Next(0, this.slides.Count);
+                int position1 = _random.Next(0, this.Slides.Count);
+                int position2;
 
                 do
                 {
-                    position2 = random.Next(0, this.slides.Count);
-
+                    position2 = _random.Next(0, this.Slides.Count);
                 } while (position2 == position1);
 
-                Slide firstSlide = this.slides[position1];
-                Slide secondSlide = this.slides[position2];
+                Slide firstSlide = new Slide(Slides[position1].Photos);
+                Slide secondSlide = new Slide(Slides[position2].Photos);
 
-
-                //if(firstSlide.Photos.Count == 1 || secondSlide.Photos.Count == 1)
-                //{
-                    tmpSlides[position1].Photos = secondSlide.Photos;
-                    tmpSlides[position1].Tags= secondSlide.Tags;
-
-                    tmpSlides[position2].Photos = firstSlide.Photos;
-                    tmpSlides[position2].Tags = firstSlide.Tags;
-                //}
-                //else
-                //{
+                // Create new slides
+                tmpSlides[position1] = new Slide(secondSlide.Photos);
+                tmpSlides[position2] = new Slide(firstSlide.Photos);
 
                 //TODO
                 // When we pick two slides with two photos
@@ -143,20 +130,17 @@ namespace SlideShowProblem
 
                 int currentInterestFactor = CalculateInterestFactor(tmpSlides);
 
-                if(currentInterestFactor >= this.interestFactor)
+                if (currentInterestFactor >= InterestFactor)
                 {
-                    this.interestFactor = currentInterestFactor;
-                    this.slides = tmpSlides;
+                    InterestFactor = currentInterestFactor;
+                    Slides = new List<Slide>(tmpSlides);
                 }
-
             }
-
-
         }
 
         public int CalculateInterestFactor(List<Slide> slides)
         {
-            int _interestFactor = 0;
+            int interestFactor = 0;
 
             for (int i = 0; i < slides.Count - 1; i++)
             {
@@ -165,27 +149,26 @@ namespace SlideShowProblem
                 int slideAnotB = DifferentTagsFactor(slides[i], slides[i + 1]);
                 int slideBnotA = DifferentTagsFactor(slides[i + 1], slides[i]);
 
-                _interestFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
+                interestFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
             }
 
-            return _interestFactor;
+            return interestFactor;
         }
 
         private int CommonTagsFactor(Slide firstSlide, Slide secondSlide)
         {
-            return firstSlide.Tags.Where(x => secondSlide.Tags.Contains(x)).Count();
+            return firstSlide.Tags.Count(x => secondSlide.Tags.Contains(x));
         }
 
         private int DifferentTagsFactor(Slide firstSlide, Slide secondSlide)
         {
-            return firstSlide.Tags.Where(x => !secondSlide.Tags.Contains(x)).Count();
+            return firstSlide.Tags.Count(x => !secondSlide.Tags.Contains(x));
         }
 
         public void PrintSolution()
         {
-            Console.WriteLine($"Number of slides: { this.slides.Count() }\n");
-            Console.WriteLine($"Interest Factor: { this.interestFactor }");
+            Console.WriteLine($"Number of slides: {this.Slides.Count}\n");
+            Console.WriteLine($"Interest Factor: {this.InterestFactor}");
         }
-
     }
 }
