@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using SlideShowProblem.Extensions;
 using SlideShowProblem.Models;
@@ -101,6 +102,7 @@ namespace SlideShowProblem
         {
             List<Slide> tmpSlides;
 
+            /*
             // Try NO_ITERATIONS solutions
             for (int i = 0; i < NO_ITERATIONS; i++)
             {
@@ -136,6 +138,46 @@ namespace SlideShowProblem
                     Slides = new List<Slide>(tmpSlides);
                 }
             }
+            */
+
+            var watch = Stopwatch.StartNew();
+            watch.Start();
+            while (watch.Elapsed < TimeSpan.FromSeconds(10))
+            {
+                tmpSlides = new List<Slide>();
+                tmpSlides.AddRange(Slides);
+
+                // For each round generate two positions to swap slides
+                int position1 = _random.Next(0, this.Slides.Count);
+                int position2;
+
+                do
+                {
+                    position2 = _random.Next(0, this.Slides.Count);
+                } while (position2 == position1);
+
+                Slide firstSlide = new Slide(Slides[position1].Photos);
+                Slide secondSlide = new Slide(Slides[position2].Photos);
+
+                // Create new slides
+                tmpSlides[position1] = new Slide(secondSlide.Photos);
+                tmpSlides[position2] = new Slide(firstSlide.Photos);
+
+                //TODO
+                // When we pick two slides with two photos
+                // Change photos between slides
+                //}
+
+                int currentInterestFactor = CalculateInterestFactor(tmpSlides);
+
+                if (currentInterestFactor >= InterestFactor)
+                {
+                    InterestFactor = currentInterestFactor;
+                    Slides = new List<Slide>(tmpSlides);
+                }
+            }
+
+            watch.Stop();
         }
 
         public int CalculateInterestFactor(List<Slide> slides)

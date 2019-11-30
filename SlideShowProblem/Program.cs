@@ -7,13 +7,13 @@ using SlideShowProblem.Models;
 
 namespace SlideShowProblem
 {
-    class Program
+    static class Program
     {
         private static int _numberOfPhotosInCollection;
 
         static void Main(string[] args)
         {
-            var fileLines = File.ReadAllLines("./input/b_lovely_landscapes.txt");
+            var fileLines = File.ReadAllLines("./input/c_memorable_moments.txt");
 
             _numberOfPhotosInCollection = int.Parse(fileLines[0]);
 
@@ -41,7 +41,7 @@ namespace SlideShowProblem
             watch.Stop();
 
             solution.PrintSolution();
-            Console.WriteLine($"Algorithm took ${watch.Elapsed.TotalSeconds} seconds");
+            Console.WriteLine($"Algorithm took {watch.Elapsed.TotalSeconds} seconds");
 
             Console.ReadLine();
         }
