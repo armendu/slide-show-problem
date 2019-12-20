@@ -26,6 +26,9 @@ namespace SlideShowProblem
             // Change photos position
             photos.Shuffle(_random);
 
+            //TODO
+            //Add Heuristic for initial solution 
+
             // Number of photos
             int noPhotos = photos.Count;
 
@@ -142,7 +145,54 @@ namespace SlideShowProblem
 
             var watch = Stopwatch.StartNew();
             watch.Start();
-            while (watch.Elapsed < TimeSpan.FromSeconds(10))
+            while (watch.Elapsed < TimeSpan.FromSeconds(60))
+            {
+                tmpSlides = new List<Slide>();
+                tmpSlides.AddRange(Slides);
+
+                // For each round generate two positions to swap slides
+                int position1 = _random.Next(0, this.Slides.Count);
+                int position2;
+
+                do
+                {
+                    position2 = _random.Next(0, this.Slides.Count);
+                } while (position2 == position1);
+
+                Slide firstSlide = new Slide(Slides[position1].Photos);
+                Slide secondSlide = new Slide(Slides[position2].Photos);
+                
+                // Create new slides
+                tmpSlides[position1] = new Slide(secondSlide.Photos);
+                tmpSlides[position2] = new Slide(firstSlide.Photos);
+
+                //TODO
+                // When we pick two slides with two photos
+                // Change photos between slides
+                //}
+
+                int currentInterestFactor = CalculateInterestFactor(tmpSlides);
+
+                if (currentInterestFactor >= InterestFactor)
+                {
+                    InterestFactor = currentInterestFactor;
+                    Slides = new List<Slide>(tmpSlides);
+                }
+            }
+
+            watch.Stop();
+        }
+
+
+        // Hill Climbing Algorithm
+        public void GuidedLocalSearch()
+        {
+            List<Slide> tmpSlides;
+
+      
+            var watch = Stopwatch.StartNew();
+            watch.Start();
+            while (watch.Elapsed < TimeSpan.FromSeconds(60))
             {
                 tmpSlides = new List<Slide>();
                 tmpSlides.AddRange(Slides);
@@ -180,6 +230,7 @@ namespace SlideShowProblem
             watch.Stop();
         }
 
+
         public int CalculateInterestFactor(List<Slide> slides)
         {
             int interestFactor = 0;
@@ -212,5 +263,13 @@ namespace SlideShowProblem
             Console.WriteLine($"Number of slides: {this.Slides.Count}\n");
             Console.WriteLine($"Interest Factor: {this.InterestFactor}");
         }
+
+        private int DeltaFactor(int pos1, int pos2)
+        {
+            //TODO
+            //Implement delta interest factor
+            return 0;
+        }
     }
+
 }
