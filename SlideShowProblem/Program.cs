@@ -37,7 +37,7 @@ namespace SlideShowProblem
 
             var watch = Stopwatch.StartNew();
             watch.Start();
-            solution.HillClimbing();
+            solution.GuidedLocalSearch();
             watch.Stop();
 
             solution.PrintSolution();

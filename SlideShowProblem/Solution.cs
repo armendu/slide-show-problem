@@ -189,7 +189,6 @@ namespace SlideShowProblem
         {
             List<Slide> tmpSlides;
 
-      
             var watch = Stopwatch.StartNew();
             watch.Start();
             while (watch.Elapsed < TimeSpan.FromSeconds(60))
@@ -209,16 +208,20 @@ namespace SlideShowProblem
                 Slide firstSlide = new Slide(Slides[position1].Photos);
                 Slide secondSlide = new Slide(Slides[position2].Photos);
 
+                int currentInterestFactor = InterestFactor - DeltaFactor(tmpSlides, position1, position2);
+
                 // Create new slides
                 tmpSlides[position1] = new Slide(secondSlide.Photos);
                 tmpSlides[position2] = new Slide(firstSlide.Photos);
+
+                currentInterestFactor = currentInterestFactor + DeltaFactor(tmpSlides, position1, position2);
 
                 //TODO
                 // When we pick two slides with two photos
                 // Change photos between slides
                 //}
 
-                int currentInterestFactor = CalculateInterestFactor(tmpSlides);
+                //int currentInterestFactor = CalculateInterestFactor(tmpSlides);
 
                 if (currentInterestFactor >= InterestFactor)
                 {
@@ -229,7 +232,7 @@ namespace SlideShowProblem
 
             watch.Stop();
         }
-
+     
 
         public int CalculateInterestFactor(List<Slide> slides)
         {
@@ -264,11 +267,63 @@ namespace SlideShowProblem
             Console.WriteLine($"Interest Factor: {this.InterestFactor}");
         }
 
-        private int DeltaFactor(int pos1, int pos2)
+        private int DeltaFactor(List<Slide> slides, int pos1, int pos2)
         {
-            //TODO
+            int totalInteresFactor = 0, commonTags = 0, slideAnotB = 0, slideBnotA = 0;
+
+            // Calculate interest factor between neighboors of
+            // first slide that has been picked up to be changed
+
+            // With previous neighboor
+            if (pos1 != 0)
+            {
+                commonTags = CommonTagsFactor(slides[pos1 - 1], slides[pos1]);
+
+                slideAnotB = DifferentTagsFactor(slides[pos1 - 1], slides[pos1]);
+                slideBnotA = DifferentTagsFactor(slides[pos1], slides[pos1 - 1]);
+
+                totalInteresFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
+            }
+
+            // With next neighboor
+            if (pos1 < slides.Count-1)
+            {
+                commonTags = CommonTagsFactor(slides[pos1], slides[pos1 + 1]);
+
+                slideAnotB = DifferentTagsFactor(slides[pos1], slides[pos1 + 1]);
+                slideBnotA = DifferentTagsFactor(slides[pos1 + 1], slides[pos1]);
+
+                totalInteresFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
+            }
+
+            // Calculate interest factor between neighboors of
+            // second slide that has been picked up to be changed
+
+            // With previous neighboor
+            if (pos2 != 0)
+            {
+                commonTags = CommonTagsFactor(slides[pos2 - 1], slides[pos2]);
+
+                slideAnotB = DifferentTagsFactor(slides[pos2 - 1], slides[pos2]);
+                slideBnotA = DifferentTagsFactor(slides[pos2], slides[pos2 - 1]);
+
+                totalInteresFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
+            }
+
+            // With next neighboor
+            if (pos2 < slides.Count-1)
+            {
+                commonTags = CommonTagsFactor(slides[pos2], slides[pos2 + 1]);
+
+                slideAnotB = DifferentTagsFactor(slides[pos2], slides[pos2 + 1]);
+                slideBnotA = DifferentTagsFactor(slides[pos2 + 1], slides[pos2]);
+
+                totalInteresFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
+            }
+
+
             //Implement delta interest factor
-            return 0;
+            return totalInteresFactor;
         }
     }
 
