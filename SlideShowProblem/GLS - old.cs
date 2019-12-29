@@ -7,14 +7,13 @@ using SlideShowProblem.Models;
 
 namespace SlideShowProblem
 {
-    public class GLS
+    public class GLS2
     {
         private readonly Random _random = new Random();
-        private double MAX_PENALIZABILITY = 100.0;
 
         List<Photo> _photos;
 
-        public GLS(List<Photo> photos)
+        public GLS2(List<Photo> photos)
         {
             _photos = new List<Photo>(photos);
         }
@@ -110,7 +109,7 @@ namespace SlideShowProblem
             Solution FirstSolution = ConfigSolution(_photos);
 
             // Components
-            var C = new List<Slide>(FirstSolution.Slides);
+            var C = GenerateComponents(FirstSolution.Slides);
 
             // Total Time
             var totalTime = TimeSpan.FromSeconds(20);
@@ -173,41 +172,61 @@ namespace SlideShowProblem
 
                 List<Slide> currentSlides = S.Slides;
 
-                for (int i = 0; i < C.Count; i++)
+                for (int i = 0; i < currentSlides.Count-1; i++)
                 {
-                    if(HasFeature(S, C[i]))
+
+                    // Form component 1 as a combination between each pair of Slide ID-s
+                    string firstComponent = currentSlides[i].ID + " - " + currentSlides[i + 1].ID;
+
+                    // Calculate value of this pair
+                    int firstComponentValue = ComponentValue(currentSlides[i], currentSlides[i + 1]);
+
+                    // Get index in list
+                    int firstComponnentIndex = ComponentIndex(C, firstComponent);
+
+                    //Get component penalty
+                    int firstComponentP = p[firstComponnentIndex];
+
+                    //Get penalizability
+                    double firstComponentPenalizability = Penalizability(firstComponentValue, firstComponentP);
+
+                    // Indicator to check if current component is more penalizible or eqaul than/with all others
+                    bool isMorePenalizible = true;
+
+                    for (int j = 0; j < currentSlides.Count-1; j++)
                     {
-                        //Get penalizability
-                        double firstComponentPenalizability = Penalizability(S, C[i], p[i]);
-
-                        // Indicator to check if current component is more penalizible or eqaul than/with all others
-                        bool isMorePenalizible = true;
-
-                        for (int j = 0; j < C.Count; j++)
+                        if (i != j)
                         {
-                            if(i != j)
-                            {
-                                if(HasFeature(S, C[j]))
-                                {
-                                    //Get penalizability
-                                    double secondComponentPenalizability = Penalizability(S, C[j], p[j]);
+                            // Form component 1 as a combination between each pair of Slide ID-s
+                            string secondComponent = currentSlides[j].ID + " - " + currentSlides[j + 1].ID;
 
-                                    //If there is only one component that is more penalizible than the one we are comparing
-                                    //Than break and go look others
-                                    if (firstComponentPenalizability < secondComponentPenalizability)
-                                    {
-                                        isMorePenalizible = false;
-                                        break;
-                                    }
-                                }
+                            // Calculate value of this pair                           
+                            int secondComponentValue = ComponentValue(currentSlides[j], currentSlides[j + 1]);
+
+                            // Get index in list                           
+                            int secondComponnentIndex = ComponentIndex(C, secondComponent);
+
+                            //Get component penalty
+                            int secondComponentP = p[secondComponnentIndex];
+
+                            //Get penalizability
+                            double secondComponentPenalizability = Penalizability(secondComponentValue, secondComponentP);
+
+                            //If there is only one component that is more penalizible than the one we are comparing
+                            //Than break and go look others
+                            if(firstComponentPenalizability < secondComponentPenalizability)
+                            {
+                                isMorePenalizible = false;
+                                break;
                             }
                         }
-
-                        //If component[i] is the most penalizible, add it to list
-                        if (isMorePenalizible)
-                            C_prim.Add(i);
                     }
+
+                    //If component[i] is the most penalizible, add it to list
+                    if (isMorePenalizible)
+                        C_prim.Add(firstComponnentIndex);
                 }
+
 
                 // Foreach component that we have seleceted as the most penalizibles
                 // Increase penalty for one
@@ -219,9 +238,8 @@ namespace SlideShowProblem
             }
 
             watch.Stop();
-
-            Best.PrintSolution();
         }
+
 
 
         public int CalculateInterestFactor(List<Slide> slides)
@@ -308,14 +326,29 @@ namespace SlideShowProblem
 
             //Implement delta interest factor
             return totalInteresFactor;
-        }    
+        }
+
+        private List<string> GenerateComponents(List<Slide> slides)
+        {
+            List<string> Components = new List<string>();
+
+            for (int i = 0; i < slides.Count-1; i++)
+            {
+                for (int j = i+1; j < slides.Count; j++)
+                {
+                    Components.Add(slides[i].ID + " - " + slides[j].ID);
+                 
+                }
+            }
+
+            return Components;
+        }
 
         private Solution CopySolution(Solution origin)
         {
             List<Slide> slides = new List<Slide>(origin.Slides);
-            int interestFactor = origin.InterestFactor;
 
-            Solution destination = new Solution(slides, interestFactor);
+            Solution destination = new Solution(slides, 0);
 
             return destination;
         }
@@ -357,7 +390,7 @@ namespace SlideShowProblem
             return s.InterestFactor;
         }
 
-        private double AdjustedQuality(Solution s, List<Slide> C, List<int> p)
+        private double AdjustedQuality(Solution s, List<string> C, List<int> p)
         {
             // beta factor
             double beta = s.InterestFactor / s.Slides.Count;
@@ -374,15 +407,24 @@ namespace SlideShowProblem
             return s.InterestFactor + beta*sum;
         }
 
-        private bool HasFeature(Solution s, Slide feature)
+        private bool HasFeature(Solution s, string feature)
         {
             List<Slide> slides = s.Slides;
 
             for (int i = 0; i < slides.Count-1; i++)
             {
+                for (int j = i+1; j < slides.Count; j++)
+                {
+                    // Control A - B
+                    string currentFeature = slides[i].ID + " - " + slides[j].ID;
+                    if (feature == currentFeature)
+                        return true;
 
-                if (slides[i].ID == feature.ID)
-                    return true;
+                    // Control B - A
+                    currentFeature = slides[j].ID + " - " + slides[i].ID;
+                    if (feature == currentFeature)
+                        return true;
+                }
             }
 
             return false;
@@ -400,41 +442,9 @@ namespace SlideShowProblem
             return p;
         }
 
-        private double Penalizability(Solution s, Slide component, int p)
+        private double Penalizability(int cValue, int p)
         {
-            int cValue = GetComponentValue(s, component);
-
-            if (cValue == 0)
-                return MAX_PENALIZABILITY;
-
             return 1 / ( (1+p) * cValue);
-        }
-
-        private int GetComponentValue(Solution s, Slide component)
-        {
-            int size = s.Slides.Count;
-
-            int prevFactor = 0, nextFactor = 0;
-
-            for (int i = 0; i < size; i++)
-            {
-                if(s.Slides[i].ID == component.ID)
-                {
-                    if(i > 0)
-                    {
-                        prevFactor = ComponentValue(s.Slides[i - 1], s.Slides[i]);
-                    }
-
-                    if (i < size-1)
-                    {
-                        nextFactor = ComponentValue(s.Slides[i], s.Slides[i+1]);
-                    }
-
-                    return prevFactor + nextFactor;
-                }
-            }
-
-            return 0;
         }
 
         public int ComponentValue(Slide s1, Slide s2)
