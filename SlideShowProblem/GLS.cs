@@ -398,7 +398,24 @@ namespace SlideShowProblem
 
         private Solution Tweak(Solution s)
         {
-            return SwapTwoSlides(s);
+            int tweakOption = _random.Next(0, 3);
+
+
+            switch (tweakOption)
+            {
+                case 0:
+                    return SwapTwoSlides(s);
+
+                case 1:
+                    return SwapTwoVerticalPhotos(s);
+
+                case 2:
+                    return ShiftElement(s);
+
+                default:
+                    return ShiftElement(s);
+
+            }           
         }
 
         private Solution SwapTwoSlides(Solution s)
@@ -470,32 +487,57 @@ namespace SlideShowProblem
         private Solution ShiftElement(Solution s)
         {
             List<Slide> slides = new List<Slide>(s.Slides);
+            int size = slides.Count;
+
             int interestFactor = s.InterestFactor;
 
-            int position1 = _random.Next(0, slides.Count);
-            int position2;
+            // Remove interest factor of last two slides
+            int currentInterestFactor = interestFactor - RemoveFactor(slides);
 
-            do
-            {
-                position2 = _random.Next(0, slides.Count);
-            } while (position2 == position1 && slides[position2].Photos.Count != 2);
+            Slide lastSlide = slides[size - 1];
 
-            // Remove interest factor that is related with these two slides
-            int currentInterestFactor = interestFactor - DeltaFactor(slides, position1, position2);
+            slides.RemoveAt(size - 1);
 
-            // Swap slides
-            if (slides[position1].Photos.Count == 2 && slides[position2].Photos.Count == 2)
-            {
-                slides[position1].Photos.SwapElementsWithAnotherList(slides[position2].Photos, 0, 1);
-            }
+            slides.Prepend(lastSlide);
 
-            // Add interest factor after swaping slides
-            currentInterestFactor = currentInterestFactor + DeltaFactor(slides, position1, position2);
+            // Add interest factor of first two slides
+            currentInterestFactor = currentInterestFactor + AddFactor(slides);
 
             Solution s2 = new Solution(slides, currentInterestFactor);
 
             return s2;
         }
+
+        private int RemoveFactor(List<Slide> slides)
+        {
+            int totalInteresFactor = 0, commonTags = 0, slideAnotB = 0, slideBnotA = 0;
+
+            commonTags = CommonTagsFactor(slides[slides.Count-2], slides[slides.Count - 1]);
+
+            slideAnotB = DifferentTagsFactor(slides[slides.Count - 2], slides[slides.Count - 1]);
+            slideBnotA = DifferentTagsFactor(slides[slides.Count - 1], slides[slides.Count - 2]);
+
+            totalInteresFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));    
+
+            //Implement delta interest factor
+            return totalInteresFactor;
+        }
+
+        private int AddFactor(List<Slide> slides)
+        {
+            int totalInteresFactor = 0, commonTags = 0, slideAnotB = 0, slideBnotA = 0;
+
+            commonTags = CommonTagsFactor(slides[0], slides[1]);
+
+            slideAnotB = DifferentTagsFactor(slides[0], slides[1]);
+            slideBnotA = DifferentTagsFactor(slides[1], slides[0]);
+
+            totalInteresFactor += Math.Min(commonTags, Math.Min(slideAnotB, slideBnotA));
+
+            //Implement delta interest factor
+            return totalInteresFactor;
+        }
+
 
         private int Quality(Solution s)
         {
@@ -519,19 +561,6 @@ namespace SlideShowProblem
             return s.InterestFactor + beta*sum;
         }
 
-        private bool HasFeature(Solution s, Slide feature)
-        {
-            List<Slide> slides = s.Slides;
-
-            for (int i = 0; i < slides.Count-1; i++)
-            {
-
-                if (slides[i].ID == feature.ID)
-                    return true;
-            }
-
-            return false;
-        }
 
         private List<int> InitializePenalties(int size)
         {
@@ -552,7 +581,9 @@ namespace SlideShowProblem
             if (cValue == 0)
                 return MAX_PENALIZABILITY;
 
-            return 1 / ( (1+p) * cValue);
+            double penalizability = 1.0 / ((1 + p) * cValue);
+
+            return penalizability;
         }
 
         private int GetComponentValue(Solution s, Slide component)
