@@ -4,11 +4,13 @@ namespace SlideShowProblem.Models
 {
     public class Slide
     {
+        public int ID;
         public List<Photo> Photos { get; set; }
         public HashSet<string> Tags { get; set; }
         
-        public Slide(List<Photo> photos)
+        public Slide(List<Photo> photos, int _ID)
         {
+            ID = _ID;
             Photos = new List<Photo>();
             foreach (var photo in photos)
             {

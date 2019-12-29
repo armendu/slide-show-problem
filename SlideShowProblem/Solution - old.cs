@@ -7,23 +7,17 @@ using SlideShowProblem.Models;
 
 namespace SlideShowProblem
 {
-    public class Solution
+    public class Solution2
     {
         private const int NO_ITERATIONS = 500;
         private readonly Random _random = new Random();
         public List<Slide> Slides { get; set; }
         public int InterestFactor { get; set; }
 
-        public Solution()
+        public Solution2()
         {
             InterestFactor = 0;
             Slides = new List<Slide>();
-        }
-
-        public Solution(List<Slide> slides, int interstFactor)
-        {
-            InterestFactor = interstFactor;
-            Slides = new List<Slide>(slides);
         }
 
         // Generates first solution on random basis
@@ -189,6 +183,105 @@ namespace SlideShowProblem
 
             watch.Stop();
         }
+
+
+        // Hill Climbing Algorithm
+        public void GuidedLocalSearch()
+        {
+            int currentInterestFactor = 0;
+            // Components
+            var C = GenerateComponents(); 
+
+            // Total Time
+            var totalTime = TimeSpan.FromSeconds(120);
+
+            // List of Times used for local optimum
+            List<int> T = new List<int>{ 20, 30, 15, 25, 8, 7 };
+
+            //List of component penalties, Initially Zero
+            List<int> p = new List<int>(C.Count);
+
+            // Initial Solution
+            List<Slide> S = new List<Slide>(Slides);
+
+            // Mark this solution as Best
+            List<Slide> Best = new List<Slide>(S);
+
+           
+            var watch = Stopwatch.StartNew();
+            watch.Start();
+
+            // Start 
+            while (watch.Elapsed < totalTime)
+            {
+
+                // Select random time
+                int randomTimeIndex =  _random.Next(0, T.Count);
+
+                int time = T[randomTimeIndex];
+
+                var localWatch = Stopwatch.StartNew();
+                localWatch.Start();
+
+                // Start local optimum
+                while (localWatch.Elapsed < TimeSpan.FromSeconds(time))
+                {
+                    // Copy S
+                    var copy = new List<Slide>(S);
+                    var tweakResult = Tweak(copy);
+
+                    var R = tweakResult.Item1;
+                    currentInterestFactor = tweakResult.Item2;
+
+                    //Quality
+                    if (currentInterestFactor > InterestFactor)
+                    {
+                        Best = new List<Slide>(R);
+                        InterestFactor = currentInterestFactor;
+                    }
+
+                }
+
+                S = new List<Slide>();
+                S.AddRange(Slides);
+
+                // For each round generate two positions to swap slides
+                int position1 = _random.Next(0, this.Slides.Count);
+                int position2;
+
+                do
+                {
+                    position2 = _random.Next(0, this.Slides.Count);
+                } while (position2 == position1);
+
+                Slide firstSlide = new Slide(Slides[position1].Photos, Slides[position1].ID);
+                Slide secondSlide = new Slide(Slides[position2].Photos, Slides[position2].ID);
+
+                currentInterestFactor = InterestFactor - DeltaFactor(S, position1, position2);
+
+                // Create new slides
+                S[position1] = new Slide(secondSlide.Photos, secondSlide.ID);
+                S[position2] = new Slide(firstSlide.Photos, firstSlide.ID);
+
+                currentInterestFactor = currentInterestFactor + DeltaFactor(S, position1, position2);
+
+                //TODO
+                // When we pick two slides with two photos
+                // Change photos between slides
+                //}
+
+                //int currentInterestFactor = CalculateInterestFactor(tmpSlides);
+
+                if (currentInterestFactor >= InterestFactor)
+                {
+                    InterestFactor = currentInterestFactor;
+                    Slides = new List<Slide>(S);
+                }
+            }
+
+            watch.Stop();
+        }
+     
 
         public int CalculateInterestFactor(List<Slide> slides)
         {

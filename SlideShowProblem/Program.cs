@@ -32,15 +32,24 @@ namespace SlideShowProblem
                 });
             }
 
-            Solution solution = new Solution();
-            solution.TrySolution(photos);
+            GLS gls = new GLS(photos);
 
             var watch = Stopwatch.StartNew();
             watch.Start();
-            solution.GuidedLocalSearch();
+            gls.Start();
             watch.Stop();
 
-            solution.PrintSolution();
+
+
+            //Solution solution = new Solution();
+            //solution.TrySolution(photos);
+
+            //var watch = Stopwatch.StartNew();
+            //watch.Start();
+            //solution.HillClimbing();
+            //watch.Stop();
+
+            //solution.PrintSolution();
             Console.WriteLine($"Algorithm took {watch.Elapsed.TotalSeconds} seconds");
 
             Console.ReadLine();
