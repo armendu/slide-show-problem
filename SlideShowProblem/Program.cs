@@ -10,10 +10,18 @@ namespace SlideShowProblem
     static class Program
     {
         private static int _numberOfPhotosInCollection;
+        private static string[] fileNames =
+        {
+            "./Input/a_example.txt",
+            "./Input/b_lovely_landscapes.txt",
+            "./Input/c_memorable_moments.txt",
+            "./Input/d_pet_pictures.txt",
+            "./Input/e_shiny_selfies.txt"
+        };
 
         static void Main(string[] args)
         {
-            var fileLines = File.ReadAllLines("./input/c_memorable_moments.txt");
+            var fileLines = File.ReadAllLines(fileNames[2]);
 
             _numberOfPhotosInCollection = int.Parse(fileLines[0]);
 
@@ -50,7 +58,6 @@ namespace SlideShowProblem
             //watch.Stop();
 
             //solution.PrintSolution();
-            Console.WriteLine($"Algorithm took {watch.Elapsed.TotalSeconds} seconds");
 
             Console.ReadLine();
         }

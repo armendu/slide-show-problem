@@ -20,6 +20,13 @@ namespace SlideShowProblem.Extensions
             list[j] = temp;
         }
 
+        public static void SwapElementsWithAnotherList<T>(this IList<T> list1, IList<T> list2, int i, int j)
+        {
+            var temp = list1[j];
+            list1[j] = list2[i];
+            list2[i] = temp;
+        }
+
         public static double GenerateDouble(this Random random, double minValue, double maxValue)
         {
             return random.NextDouble() * (maxValue - minValue) + minValue;

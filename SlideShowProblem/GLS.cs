@@ -86,6 +86,85 @@ namespace SlideShowProblem
             return s;
         }
 
+        public Solution GenerateGreedySolution(List<Photo> photos)
+        {
+            Solution s = new Solution();
+            List<Slide> slides = new List<Slide>();
+            List<Photo> slidePhotos;
+            int noPhotos = photos.Count;
+            int slideID = 1;
+
+            // Put photos that have similar tags closer together
+            for (int i = 0; i < noPhotos; i += (int)Math.Ceiling(noPhotos * 0.001))
+            {
+                //for (int j = i + 1; j < i + ((noPhotos - i) / 2); j++)
+                for (int j = i + 1; j < i + (int)Math.Ceiling(noPhotos * 0.1); j++)
+                {
+                    if (j >= noPhotos)
+                        break;
+
+                    if (photos[i].Tags.Intersect(photos[j].Tags).Any())
+                    {
+                        if ((i + 1) != j)
+                        {
+                            photos.Swap(i + 1, j);
+                        }
+                        i++;
+                        break;
+                    }
+                }
+            }
+
+            int photoToSkipId = -1;
+
+            // Iterate into photos and put them in list
+            for (int i = 0; i < noPhotos; i++)
+            {
+                // If we have selected this photo before
+                // Continue
+                if (photos[i].ID == photoToSkipId)
+                    continue;
+
+                slidePhotos = new List<Photo>();
+
+                // If current photo has horizontal orientation
+                // Put that photo into one slide
+                if (photos[i].Orientation == Orientation.H)
+                {
+                    slidePhotos.Add(photos[i]);
+                }
+
+                // If current photo has vertical orientation
+                else
+                {
+                    // Add that photo
+                    slidePhotos.Add(photos[i]);
+
+                    // Try to get the next one with vertical orientation
+                    Photo nextVerticalPhoto = GetNextVerticalPhoto(photos, i + 1);
+
+                    // If there is one
+                    // Add that on the list
+                    // And mark that one as visited
+                    if (nextVerticalPhoto != null)
+                    {
+                        slidePhotos.Add(nextVerticalPhoto);
+                        photoToSkipId = nextVerticalPhoto.ID;
+                    }
+                }
+
+                Slide oneSlide = new Slide(slidePhotos, slideID++);
+
+                slides.Add(oneSlide);
+            }
+
+            // Calculate fitness and save it
+            s.Slides = slides;
+            s.InterestFactor = CalculateInterestFactor(slides);
+
+            return s;
+        }
+
         // Returns the next vertical photo in list
         private Photo GetNextVerticalPhoto(List<Photo> photos, int start)
         {
@@ -107,13 +186,14 @@ namespace SlideShowProblem
         // Main work
         public void Start()
         {
-            Solution FirstSolution = ConfigSolution(_photos);
+            //Solution FirstSolution = ConfigSolution(_photos);
+            var FirstSolution = GenerateGreedySolution(_photos);
 
             // Components
             var C = new List<Slide>(FirstSolution.Slides);
 
             // Total Time
-            var totalTime = TimeSpan.FromSeconds(20);
+            var totalTime = TimeSpan.FromSeconds(60);
 
             // List of Times used for local optimum
             List<int> T = new List<int> { 20, 30, 15, 25, 8, 7 };
@@ -124,10 +204,8 @@ namespace SlideShowProblem
             // Initial Solution
             Solution S = CopySolution(FirstSolution);
 
-
             // Mark this solution as Best
             Solution Best = CopySolution(S);
-
 
             var watch = Stopwatch.StartNew();
             watch.Start();
@@ -135,7 +213,6 @@ namespace SlideShowProblem
             // Start 
             while (watch.Elapsed < totalTime)
             {
-
                 // Select random time
                 int randomTimeIndex = _random.Next(0, T.Count);
 
@@ -145,7 +222,7 @@ namespace SlideShowProblem
                 localWatch.Start();
 
                 // Start local optimum
-                while (localWatch.Elapsed < TimeSpan.FromSeconds(time))
+                while (localWatch.Elapsed < TimeSpan.FromSeconds(time) && watch.Elapsed < totalTime)
                 {
                     // Copy S
                     var copy = CopySolution(S);
@@ -162,7 +239,6 @@ namespace SlideShowProblem
                     if (AdjustedQuality(R, C, p) > AdjustedQuality(S, C, p))
                     {
                         S = CopySolution(R);
-
                     }
                 }
 
@@ -175,8 +251,8 @@ namespace SlideShowProblem
 
                 for (int i = 0; i < C.Count; i++)
                 {
-                    if(HasFeature(S, C[i]))
-                    {
+                    //if(HasFeature(S, C[i]))
+                    //{
                         //Get penalizability
                         double firstComponentPenalizability = Penalizability(S, C[i], p[i]);
 
@@ -187,8 +263,8 @@ namespace SlideShowProblem
                         {
                             if(i != j)
                             {
-                                if(HasFeature(S, C[j]))
-                                {
+                                //if(HasFeature(S, C[j]))
+                                //{
                                     //Get penalizability
                                     double secondComponentPenalizability = Penalizability(S, C[j], p[j]);
 
@@ -199,7 +275,7 @@ namespace SlideShowProblem
                                         isMorePenalizible = false;
                                         break;
                                     }
-                                }
+                                //}
                             }
                         }
 
@@ -207,7 +283,7 @@ namespace SlideShowProblem
                         if (isMorePenalizible)
                             C_prim.Add(i);
                     }
-                }
+                //}
 
                 // Foreach component that we have seleceted as the most penalizibles
                 // Increase penalty for one
@@ -322,6 +398,11 @@ namespace SlideShowProblem
 
         private Solution Tweak(Solution s)
         {
+            return SwapTwoSlides(s);
+        }
+
+        private Solution SwapTwoSlides(Solution s)
+        {
             List<Slide> slides = new List<Slide>(s.Slides);
             int interestFactor = s.InterestFactor;
 
@@ -352,6 +433,70 @@ namespace SlideShowProblem
             return s2;
         }
 
+        private Solution SwapTwoVerticalPhotos(Solution s)
+        {
+            List<Slide> slides = new List<Slide>(s.Slides);
+            int interestFactor = s.InterestFactor;
+
+            int position1, position2;
+
+            do
+            {
+                position1 = _random.Next(0, slides.Count);
+            } while (slides[position1].Photos.Count != 2);
+
+            do
+            {
+                position2 = _random.Next(0, slides.Count);
+            } while (position2 == position1 && slides[position2].Photos.Count != 2);
+
+            // Remove interest factor that is related with these two slides
+            int currentInterestFactor = interestFactor - DeltaFactor(slides, position1, position2);
+
+            // Swap slides
+            if (slides[position1].Photos.Count == 2 && slides[position2].Photos.Count == 2)
+            {
+                slides[position1].Photos.SwapElementsWithAnotherList(slides[position2].Photos, 0, 1);
+            }
+
+            // Add interest factor after swaping slides
+            currentInterestFactor = currentInterestFactor + DeltaFactor(slides, position1, position2);
+
+            Solution s2 = new Solution(slides, currentInterestFactor);
+
+            return s2;
+        }
+
+        private Solution ShiftElement(Solution s)
+        {
+            List<Slide> slides = new List<Slide>(s.Slides);
+            int interestFactor = s.InterestFactor;
+
+            int position1 = _random.Next(0, slides.Count);
+            int position2;
+
+            do
+            {
+                position2 = _random.Next(0, slides.Count);
+            } while (position2 == position1 && slides[position2].Photos.Count != 2);
+
+            // Remove interest factor that is related with these two slides
+            int currentInterestFactor = interestFactor - DeltaFactor(slides, position1, position2);
+
+            // Swap slides
+            if (slides[position1].Photos.Count == 2 && slides[position2].Photos.Count == 2)
+            {
+                slides[position1].Photos.SwapElementsWithAnotherList(slides[position2].Photos, 0, 1);
+            }
+
+            // Add interest factor after swaping slides
+            currentInterestFactor = currentInterestFactor + DeltaFactor(slides, position1, position2);
+
+            Solution s2 = new Solution(slides, currentInterestFactor);
+
+            return s2;
+        }
+
         private int Quality(Solution s)
         {
             return s.InterestFactor;
@@ -366,7 +511,7 @@ namespace SlideShowProblem
             double sum = 0;
             for (int i = 0; i < C.Count; i++)
             {
-                if (HasFeature(s, C[i]))
+                //if (HasFeature(s, C[i]))
                     sum += p[i];
               
             }
