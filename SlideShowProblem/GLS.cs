@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using SlideShowProblem.Extensions;
 using SlideShowProblem.Models;
@@ -11,6 +12,7 @@ namespace SlideShowProblem
     {
         private readonly Random _random = new Random();
         private double MAX_PENALIZABILITY = 100.0;
+        private const string OUTPUT_FILENAME = "./output/output.txt";
 
         List<Photo> _photos;
 
@@ -276,7 +278,7 @@ namespace SlideShowProblem
                         }
                     }
 
-                    Console.WriteLine("Row: " + i);
+                    //Console.WriteLine("Row: " + i);
                     //If component[i] is the most penalizible, add it to list
                     if (isMorePenalizible)
                             C_prim.Add(i);
@@ -295,6 +297,7 @@ namespace SlideShowProblem
             watch.Stop();
 
             Best.PrintSolution();
+            CreateOutputFile(Best);
         }
 
 
@@ -644,6 +647,18 @@ namespace SlideShowProblem
             }
 
             return -1;
+        }
+
+        public void CreateOutputFile(Solution s)
+        {
+            using (var sw = new StreamWriter(new FileStream(OUTPUT_FILENAME, FileMode.CreateNew)))
+            {
+                sw.WriteLine(s.Slides.Count);
+                foreach (Slide slide in s.Slides)
+                {
+                    sw.WriteLine(string.Join(" ", slide.Photos.Select(x => x.ID).ToList()));
+                }
+            }
         }
     }
 }
