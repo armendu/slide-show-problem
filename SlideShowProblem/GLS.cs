@@ -193,7 +193,7 @@ namespace SlideShowProblem
             var C = new List<Slide>(FirstSolution.Slides);
 
             // Total Time
-            var totalTime = TimeSpan.FromSeconds(60);
+            var totalTime = TimeSpan.FromSeconds(300);
 
             // List of Times used for local optimum
             List<int> T = new List<int> { 20, 30, 15, 25, 8, 7 };
@@ -251,40 +251,38 @@ namespace SlideShowProblem
 
                 for (int i = 0; i < C.Count; i++)
                 {
-                    //if(HasFeature(S, C[i]))
-                    //{
-                        //Get penalizability
-                        double firstComponentPenalizability = Penalizability(S, C[i], p[i]);
 
-                        // Indicator to check if current component is more penalizible or eqaul than/with all others
-                        bool isMorePenalizible = true;
+                    //Get penalizability
+                    double firstComponentPenalizability = Penalizability(S, C[i], p[i]);
 
-                        for (int j = 0; j < C.Count; j++)
+                    // Indicator to check if current component is more penalizible or eqaul than/with all others
+                    bool isMorePenalizible = true;
+
+                    for (int j = 0; j < C.Count; j++)
+                    {
+                        if(i != j)
                         {
-                            if(i != j)
-                            {
-                                //if(HasFeature(S, C[j]))
-                                //{
-                                    //Get penalizability
-                                    double secondComponentPenalizability = Penalizability(S, C[j], p[j]);
 
-                                    //If there is only one component that is more penalizible than the one we are comparing
-                                    //Than break and go look others
-                                    if (firstComponentPenalizability < secondComponentPenalizability)
-                                    {
-                                        isMorePenalizible = false;
-                                        break;
-                                    }
-                                //}
+                            //Get penalizability
+                            double secondComponentPenalizability = Penalizability(S, C[j], p[j]);
+
+                            //If there is only one component that is more penalizible than the one we are comparing
+                            //Than break and go look others
+                            if (firstComponentPenalizability < secondComponentPenalizability)
+                            {
+                                isMorePenalizible = false;
+                                break;
                             }
                         }
+                    }
 
-                        //If component[i] is the most penalizible, add it to list
-                        if (isMorePenalizible)
+                    Console.WriteLine("Row: " + i);
+                    //If component[i] is the most penalizible, add it to list
+                    if (isMorePenalizible)
                             C_prim.Add(i);
                     }
                 //}
-
+               
                 // Foreach component that we have seleceted as the most penalizibles
                 // Increase penalty for one
                 for (int i = 0; i < C_prim.Count; i++)
@@ -400,7 +398,6 @@ namespace SlideShowProblem
         {
             int tweakOption = _random.Next(0, 3);
 
-
             switch (tweakOption)
             {
                 case 0:
@@ -455,17 +452,28 @@ namespace SlideShowProblem
             List<Slide> slides = new List<Slide>(s.Slides);
             int interestFactor = s.InterestFactor;
 
-            int position1, position2;
+            int position1 = -1, position2 = -1;
 
+
+            int noTries = 10;
             do
             {
                 position1 = _random.Next(0, slides.Count);
-            } while (slides[position1].Photos.Count != 2);
+            } while (noTries-- > 0 && slides[position1].Photos.Count != 2 );
+
+            if (slides[position1].Photos.Count != 2)
+                return ShiftElement(s);
+
+
+            noTries = 10;
 
             do
             {
                 position2 = _random.Next(0, slides.Count);
-            } while (position2 == position1 && slides[position2].Photos.Count != 2);
+            } while (noTries-- > 0 && position2 == position1 && slides[position2].Photos.Count != 2);
+
+            if (slides[position2].Photos.Count != 2)
+                return ShiftElement(s);
 
             // Remove interest factor that is related with these two slides
             int currentInterestFactor = interestFactor - DeltaFactor(slides, position1, position2);
