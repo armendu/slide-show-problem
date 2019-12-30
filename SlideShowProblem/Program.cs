@@ -21,7 +21,7 @@ namespace SlideShowProblem
 
         static void Main(string[] args)
         {
-            var fileLines = File.ReadAllLines(fileNames[2]);
+            var fileLines = File.ReadAllLines(fileNames[0]);
 
             _numberOfPhotosInCollection = int.Parse(fileLines[0]);
 

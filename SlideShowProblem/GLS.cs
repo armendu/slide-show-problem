@@ -12,7 +12,7 @@ namespace SlideShowProblem
     {
         private readonly Random _random = new Random();
         private double MAX_PENALIZABILITY = 100.0;
-        private const string OUTPUT_FILENAME = "./output/output.txt";
+        private const string OUTPUT_FILENAME = "./output.txt";
 
         List<Photo> _photos;
 
@@ -195,7 +195,7 @@ namespace SlideShowProblem
             var C = new List<Slide>(FirstSolution.Slides);
 
             // Total Time
-            var totalTime = TimeSpan.FromSeconds(300);
+            var totalTime = TimeSpan.FromSeconds(60);
 
             // List of Times used for local optimum
             List<int> T = new List<int> { 20, 30, 15, 25, 8, 7 };
@@ -500,6 +500,11 @@ namespace SlideShowProblem
             List<Slide> slides = new List<Slide>(s.Slides);
             int size = slides.Count;
 
+            if (size <= 2)
+            {
+                return SwapTwoSlides(s);
+            }
+
             int interestFactor = s.InterestFactor;
 
             // Remove interest factor of last two slides
@@ -651,13 +656,20 @@ namespace SlideShowProblem
 
         public void CreateOutputFile(Solution s)
         {
-            using (var sw = new StreamWriter(new FileStream(OUTPUT_FILENAME, FileMode.CreateNew)))
+            try
             {
-                sw.WriteLine(s.Slides.Count);
-                foreach (Slide slide in s.Slides)
+                using (var sw = new StreamWriter(new FileStream(OUTPUT_FILENAME, FileMode.CreateNew)))
                 {
-                    sw.WriteLine(string.Join(" ", slide.Photos.Select(x => x.ID).ToList()));
+                    sw.WriteLine(s.Slides.Count);
+                    foreach (Slide slide in s.Slides)
+                    {
+                        sw.WriteLine(string.Join(" ", slide.Photos.Select(x => x.ID).ToList()));
+                    }
                 }
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("Output file already exists");
             }
         }
     }
