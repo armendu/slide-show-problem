@@ -16,7 +16,7 @@ namespace SlideShowProblem
 
         List<Photo> _photos;
 
-        public GLS(List<Photo> photos, String filename)
+        public GLS(List<Photo> photos, string filename)
         {
             _photos = new List<Photo>(photos);
 
@@ -24,74 +24,7 @@ namespace SlideShowProblem
 
             var name = _fileNameArray[_fileNameArray.Length - 1];
 
-            OUTPUT_FILENAME += "output_"+name;
-        }
-
-        // Generates first solution on random basis
-        public Solution ConfigSolution(List<Photo> photos)
-        {
-            Solution s = new Solution();       
-
-            //TODO
-            //Add Heuristic for initial solution 
-
-            // Number of photos
-            int noPhotos = photos.Count;
-
-            List<Slide> slides = new List<Slide>();
-            List<Photo> slidePhotos;
-
-            int photoToSkipId = -1;
-
-            int slideID = 1;
-            // Iterate into photos and put them in list
-            for (int i = 0; i < noPhotos; i++)
-            {
-                // If we have selected this photo before
-                // Continue
-                if (photos[i].ID == photoToSkipId)
-                    continue;
-
-                slidePhotos = new List<Photo>();
-
-                // If current photo has horizontal orientation
-                // Put that photo into one slide
-                if (photos[i].Orientation == Orientation.H)
-                {
-                    slidePhotos.Add(photos[i]);
-                }
-
-                // If current photo has vertical orientation
-                else
-                {
-                    // Add that photo
-                    slidePhotos.Add(photos[i]);
-
-                    // Try to get the next one with vertical orientation
-                    Photo nextVerticalPhoto = GetNextVerticalPhoto(photos, i + 1);
-
-                    // If there is one
-                    // Add that on the list
-                    // And mark that one as visited
-                    if (nextVerticalPhoto != null)
-                    {
-                        slidePhotos.Add(nextVerticalPhoto);
-                        photoToSkipId = nextVerticalPhoto.ID;
-                    }
-                }
-
-                Slide oneSlide = new Slide(slidePhotos, slideID++);
-
-                slides.Add(oneSlide);
-            }
-
-            // Calculate fitness and save it
-            int InterestFactor = CalculateInterestFactor(slides);
-
-            s.Slides = slides;
-            s.InterestFactor = InterestFactor;
-
-            return s;
+            OUTPUT_FILENAME += "output_" + name;
         }
 
         public Solution GenerateGreedySolution(List<Photo> photos)
@@ -103,10 +36,10 @@ namespace SlideShowProblem
             int slideID = 1;
 
             // Put photos that have similar tags closer together
-            for (int i = 0; i < noPhotos; i += (int)Math.Ceiling(noPhotos * 0.001))
+            for (int i = 0; i < noPhotos; i += (int) Math.Ceiling(noPhotos * 0.001))
             {
                 //for (int j = i + 1; j < i + ((noPhotos - i) / 2); j++)
-                for (int j = i + 1; j < i + (int)Math.Ceiling(noPhotos * 0.1); j++)
+                for (int j = i + 1; j < i + (int) Math.Ceiling(noPhotos * 0.1); j++)
                 {
                     if (j >= noPhotos)
                         break;
@@ -117,6 +50,7 @@ namespace SlideShowProblem
                         {
                             photos.Swap(i + 1, j);
                         }
+
                         i++;
                         break;
                     }
@@ -204,7 +138,7 @@ namespace SlideShowProblem
             var totalTime = TimeSpan.FromSeconds(300);
 
             // List of Times used for local optimum
-            List<int> T = new List<int> { 20, 30, 15, 25, 8, 7 };
+            List<int> T = new List<int> {20, 30, 15, 25, 8, 7};
 
             //List of component penalties, Initially Zero
             List<int> p = InitializePenalties(C.Count);
@@ -271,7 +205,6 @@ namespace SlideShowProblem
                 }
 
 
-
                 var testWatch = Stopwatch.StartNew();
 
                 //Console.WriteLine("\nCompare Penalizabilities started");
@@ -280,15 +213,13 @@ namespace SlideShowProblem
                 // Compare penalizabilities
                 for (int i = 0; i < C.Count; i++)
                 {
-               
                     // Indicator to check if current component is more penalizible or eqaul than/with all others
                     bool isMorePenalizible = true;
 
                     for (int j = 0; j < C.Count; j++)
                     {
-                        if(i != j)
+                        if (i != j)
                         {
-                           
                             //If there is only one component that is more penalizible than the one we are comparing
                             //Than break and go look others
                             if (penalizabilites[i] < penalizabilites[j])
@@ -302,7 +233,7 @@ namespace SlideShowProblem
                     //Console.WriteLine("Row: " + i);
                     //If component[i] is the most penalizible, add it to list
                     if (isMorePenalizible)
-                            C_prim.Add(i);
+                        C_prim.Add(i);
                 }
 
                 //testWatch.Stop();
@@ -314,22 +245,15 @@ namespace SlideShowProblem
                 {
                     p[C_prim[i]] = p[C_prim[i]] + 1;
                 }
-
             }
 
             watch.Stop();
 
-
             //Best.InterestFactor = CalculateInterestFactor(Best.Slides);
-
-
             Console.WriteLine("Algorithm ended with these results:\n");
             Best.PrintSolution();
             CreateOutputFile(Best);
-
-
         }
-
 
         public int CalculateInterestFactor(List<Slide> slides)
         {
@@ -415,39 +339,29 @@ namespace SlideShowProblem
 
             //Implement delta interest factor
             return totalInteresFactor;
-        }    
+        }
 
         private Solution CopySolution(Solution origin)
         {
             List<Slide> slides = new List<Slide>(origin.Slides);
             int interestFactor = origin.InterestFactor;
 
-            Solution destination = new Solution(slides, interestFactor);
-
-            return destination;
+            return new Solution(slides, interestFactor);
         }
 
         private Solution Tweak(Solution s)
         {
             int tweakOption = _random.Next(0, 3);
 
-            //tweakOption = 0;
-
             switch (tweakOption)
             {
                 case 0:
                     return SwapTwoSlides(s);
-
-                //case 1:
-                    //return SwapTwoVerticalPhotos(s);
-
-                case 2:
-                    return ShiftElement(s);
-
+                case 1:
+                    return SwapTwoVerticalPhotos(s);
                 default:
                     return ShiftElement(s);
-
-            }           
+            }
         }
 
         private Solution SwapTwoSlides(Solution s)
@@ -477,9 +391,7 @@ namespace SlideShowProblem
             // Add interest factor after swaping slides
             currentInterestFactor = currentInterestFactor + DeltaFactor(slides, position1, position2);
 
-            Solution s2 = new Solution(slides, currentInterestFactor);
-
-            return s2;
+            return new Solution(slides, currentInterestFactor);
         }
 
         private Solution SwapTwoVerticalPhotos(Solution s)
@@ -489,7 +401,6 @@ namespace SlideShowProblem
 
             int position1 = -1, position2 = -1;
 
-
             int noTries = 10;
             do
             {
@@ -498,7 +409,6 @@ namespace SlideShowProblem
 
             if (slides[position1].Photos.Count != 2)
                 return ShiftElement(s);
-
 
             noTries = 10;
 
@@ -513,15 +423,31 @@ namespace SlideShowProblem
             // Remove interest factor that is related with these two slides
             int currentInterestFactor = interestFactor - DeltaFactor(slides, position1, position2);
 
-            // Swap slides            
-            slides[position1].Photos.SwapElementsWithAnotherList(slides[position2].Photos, 0, 1);
+            // Swap photos of two slides that have vertical photos
+            var tempPhoto = new Photo
+            {
+                ID = slides[position1].Photos[1].ID,
+                Orientation = slides[position1].Photos[1].Orientation,
+                TagCount = slides[position1].Photos[1].TagCount,
+                Tags = slides[position1].Photos[1].Tags
+            };
+
+            slides[position1] = new Slide(new List<Photo>
+                {
+                    slides[position1].Photos[0],
+                    slides[position2].Photos[1]
+                }, slides[position1].ID
+            );
+            slides[position2] = new Slide(new List<Photo>
+            {
+                slides[position2].Photos[0],
+                tempPhoto
+            }, slides[position2].ID);
 
             // Add interest factor after swaping slides
             currentInterestFactor = currentInterestFactor + DeltaFactor(slides, position1, position2);
 
-            Solution s2 = new Solution(slides, currentInterestFactor);
-
-            return s2;
+            return new Solution(slides, currentInterestFactor);
         }
 
         private Solution ShiftElement(Solution s)
@@ -548,9 +474,7 @@ namespace SlideShowProblem
             // Add interest factor of first two slides
             currentInterestFactor = currentInterestFactor + AddFactor(slides);
 
-            Solution s2 = new Solution(slides, currentInterestFactor);
-
-            return s2;
+            return new Solution(slides, currentInterestFactor);
         }
 
         private int RemoveFactor(List<Slide> slides)
@@ -583,7 +507,6 @@ namespace SlideShowProblem
             return totalInteresFactor;
         }
 
-
         private int Quality(Solution s)
         {
             return s.InterestFactor;
@@ -599,13 +522,10 @@ namespace SlideShowProblem
             for (int i = 0; i < C.Count; i++)
             {
                 //if (HasFeature(s, C[i]))
-                    sum += p[i];
-              
+                    sum += p[i]; 
             }
-           
             return s.InterestFactor + beta*sum;
         }
-
 
         private List<int> InitializePenalties(int size)
         {
@@ -696,7 +616,7 @@ namespace SlideShowProblem
                     }
                 }
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 Console.WriteLine("Output file already exists");
             }
