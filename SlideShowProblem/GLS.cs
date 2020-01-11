@@ -201,7 +201,7 @@ namespace SlideShowProblem
             var C = new List<Slide>(FirstSolution.Slides);
 
             // Total Time
-            var totalTime = TimeSpan.FromSeconds(60);
+            var totalTime = TimeSpan.FromSeconds(300);
 
             // List of Times used for local optimum
             List<int> T = new List<int> { 20, 30, 15, 25, 8, 7 };
@@ -214,6 +214,8 @@ namespace SlideShowProblem
 
             // Mark this solution as Best
             Solution Best = CopySolution(S);
+
+            Best.PrintSolution();
 
             var watch = Stopwatch.StartNew();
             watch.Start();
@@ -252,17 +254,33 @@ namespace SlideShowProblem
 
                 localWatch.Stop();
 
+                Best.PrintSolution();
+
                 // List to save index of items to penalize
                 List<int> C_prim = new List<int>();
 
                 List<Slide> currentSlides = S.Slides;
 
+
+                List<double> penalizabilites = new List<double>();
+
+                // Calculate all penalizabilites
                 for (int i = 0; i < C.Count; i++)
                 {
+                    penalizabilites.Add(Penalizability(S, C[i], p[i]));
+                }
 
-                    //Get penalizability
-                    double firstComponentPenalizability = Penalizability(S, C[i], p[i]);
 
+
+                var testWatch = Stopwatch.StartNew();
+
+                //Console.WriteLine("\nCompare Penalizabilities started");
+                //testWatch.Start();
+
+                // Compare penalizabilities
+                for (int i = 0; i < C.Count; i++)
+                {
+               
                     // Indicator to check if current component is more penalizible or eqaul than/with all others
                     bool isMorePenalizible = true;
 
@@ -270,13 +288,10 @@ namespace SlideShowProblem
                     {
                         if(i != j)
                         {
-
-                            //Get penalizability
-                            double secondComponentPenalizability = Penalizability(S, C[j], p[j]);
-
+                           
                             //If there is only one component that is more penalizible than the one we are comparing
                             //Than break and go look others
-                            if (firstComponentPenalizability < secondComponentPenalizability)
+                            if (penalizabilites[i] < penalizabilites[j])
                             {
                                 isMorePenalizible = false;
                                 break;
@@ -288,9 +303,11 @@ namespace SlideShowProblem
                     //If component[i] is the most penalizible, add it to list
                     if (isMorePenalizible)
                             C_prim.Add(i);
-                    }
-                //}
-               
+                }
+
+                //testWatch.Stop();
+                //Console.WriteLine("Ended for time: {0} milli seconds\n", testWatch.Elapsed.Milliseconds);
+
                 // Foreach component that we have seleceted as the most penalizibles
                 // Increase penalty for one
                 for (int i = 0; i < C_prim.Count; i++)
@@ -305,8 +322,12 @@ namespace SlideShowProblem
 
             //Best.InterestFactor = CalculateInterestFactor(Best.Slides);
 
+
+            Console.WriteLine("Algorithm ended with these results:\n");
             Best.PrintSolution();
             CreateOutputFile(Best);
+
+
         }
 
 
@@ -410,15 +431,15 @@ namespace SlideShowProblem
         {
             int tweakOption = _random.Next(0, 3);
 
-            tweakOption = 2;
+            //tweakOption = 0;
 
             switch (tweakOption)
             {
                 case 0:
                     return SwapTwoSlides(s);
 
-                case 1:
-                    return SwapTwoVerticalPhotos(s);
+                //case 1:
+                    //return SwapTwoVerticalPhotos(s);
 
                 case 2:
                     return ShiftElement(s);
@@ -518,11 +539,11 @@ namespace SlideShowProblem
             // Remove interest factor of last two slides
             int currentInterestFactor = interestFactor - RemoveFactor(slides);
 
-            Slide lastSlide = slides[size - 1];
+            Slide lastSlide = new Slide(slides[size - 1].Photos, slides[size - 1].ID);
 
             slides.RemoveAt(size - 1);
 
-            slides.Prepend(lastSlide);
+            slides.Insert(0, lastSlide);
 
             // Add interest factor of first two slides
             currentInterestFactor = currentInterestFactor + AddFactor(slides);

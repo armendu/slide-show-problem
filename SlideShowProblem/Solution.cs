@@ -27,7 +27,7 @@ namespace SlideShowProblem
         public void PrintSolution()
         {
             Console.WriteLine($"Number of slides: {this.Slides.Count}\n");
-            Console.WriteLine($"Interest Factor: {this.InterestFactor}");
+            Console.WriteLine($"Interest Factor: {this.InterestFactor}\n");
         }
 
     }
