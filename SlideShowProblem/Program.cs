@@ -21,7 +21,8 @@ namespace SlideShowProblem
 
         static void Main(string[] args)
         {
-            var fileLines = File.ReadAllLines(fileNames[0]);
+            int fileIndex = 2;
+            var fileLines = File.ReadAllLines(fileNames[fileIndex]);
 
             _numberOfPhotosInCollection = int.Parse(fileLines[0]);
 
@@ -40,7 +41,7 @@ namespace SlideShowProblem
                 });
             }
 
-            GLS gls = new GLS(photos);
+            GLS gls = new GLS(photos, fileNames[fileIndex]);
 
             var watch = Stopwatch.StartNew();
             watch.Start();

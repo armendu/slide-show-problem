@@ -12,13 +12,19 @@ namespace SlideShowProblem
     {
         private readonly Random _random = new Random();
         private double MAX_PENALIZABILITY = 100.0;
-        private const string OUTPUT_FILENAME = "./output.txt";
+        private string OUTPUT_FILENAME = "./";
 
         List<Photo> _photos;
 
-        public GLS(List<Photo> photos)
+        public GLS(List<Photo> photos, String filename)
         {
             _photos = new List<Photo>(photos);
+
+            var _fileNameArray = filename.Split("/");
+
+            var name = _fileNameArray[_fileNameArray.Length - 1];
+
+            OUTPUT_FILENAME += "output_"+name;
         }
 
         // Generates first solution on random basis
@@ -296,6 +302,9 @@ namespace SlideShowProblem
 
             watch.Stop();
 
+
+            //Best.InterestFactor = CalculateInterestFactor(Best.Slides);
+
             Best.PrintSolution();
             CreateOutputFile(Best);
         }
@@ -401,6 +410,8 @@ namespace SlideShowProblem
         {
             int tweakOption = _random.Next(0, 3);
 
+            tweakOption = 2;
+
             switch (tweakOption)
             {
                 case 0:
@@ -481,11 +492,8 @@ namespace SlideShowProblem
             // Remove interest factor that is related with these two slides
             int currentInterestFactor = interestFactor - DeltaFactor(slides, position1, position2);
 
-            // Swap slides
-            if (slides[position1].Photos.Count == 2 && slides[position2].Photos.Count == 2)
-            {
-                slides[position1].Photos.SwapElementsWithAnotherList(slides[position2].Photos, 0, 1);
-            }
+            // Swap slides            
+            slides[position1].Photos.SwapElementsWithAnotherList(slides[position2].Photos, 0, 1);
 
             // Add interest factor after swaping slides
             currentInterestFactor = currentInterestFactor + DeltaFactor(slides, position1, position2);
@@ -658,7 +666,7 @@ namespace SlideShowProblem
         {
             try
             {
-                using (var sw = new StreamWriter(new FileStream(OUTPUT_FILENAME, FileMode.CreateNew)))
+                using (var sw = new StreamWriter(new FileStream(OUTPUT_FILENAME, FileMode.Create)))
                 {
                     sw.WriteLine(s.Slides.Count);
                     foreach (Slide slide in s.Slides)
@@ -667,7 +675,7 @@ namespace SlideShowProblem
                     }
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
                 Console.WriteLine("Output file already exists");
             }
