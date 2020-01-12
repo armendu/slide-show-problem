@@ -154,6 +154,10 @@ namespace SlideShowProblem
             var watch = Stopwatch.StartNew();
             watch.Start();
 
+
+            // Number of items to be penalizable
+            int noPenalizableItems = 0;
+
             // Start 
             while (watch.Elapsed < totalTime)
             {
@@ -183,6 +187,8 @@ namespace SlideShowProblem
                     if (AdjustedQuality(R, C, p) > AdjustedQuality(S, C, p))
                     {
                         S = CopySolution(R);
+                        // TODO
+                        // Increase random times for 5 seconds;
                     }
                 }
 
@@ -238,6 +244,30 @@ namespace SlideShowProblem
 
                 //testWatch.Stop();
                 //Console.WriteLine("Ended for time: {0} milli seconds\n", testWatch.Elapsed.Milliseconds);
+
+                // If in this round, there are more penalizable
+                // Items than in the previous one
+                // Decrease times which we use to do Hill Climbing
+                // Because it means that we are stuck in local optima
+                // Othervise, if number there are less, increase that number
+
+                if(C_prim.Count > noPenalizableItems)
+                {
+                    for (int i = 0; i < T.Count; i++)
+                    {
+                        T[i] -= 2;
+                    }
+                }
+                else if (C_prim.Count > noPenalizableItems)
+                {
+                    for (int i = 0; i < T.Count; i++)
+                    {
+                        T[i] += 2;
+                    }
+                }
+
+
+                noPenalizableItems = C_prim.Count;
 
                 // Foreach component that we have seleceted as the most penalizibles
                 // Increase penalty for one
